@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Founder OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3d;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e97b;
+    --text: #e8e8f0;
+    --muted: #666680;
+    --yellow: #ffd166;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(108,99,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,99,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 20px 28px;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.7rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header-right { display: flex; align-items: center; gap: 24px; }
+
+  .live-clock {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 2px;
+    background: var(--surface2);
+    padding: 6px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .date-display { font-size: 0.72rem; color: var(--muted); text-align: right; line-height: 1.7; }
+  .date-display span { display: block; font-size: 0.85rem; color: var(--text); font-weight: 600; }
+
+  /* GRID */
+  .grid {
+    display: grid;
+    grid-template-columns: 360px 1fr 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: rgba(108,99,255,0.45); }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .card:hover::before { opacity: 1; }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  .count-badge {
+    margin-left: auto;
+    background: rgba(108,99,255,0.15);
+    color: var(--accent);
+    font-size: 0.58rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid rgba(108,99,255,0.25);
+  }
+
+  /* TIMER CARD */
+  .timer-card {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    text-align: center;
+  }
+
+  .timer-ring-wrap {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    margin: 4px auto 16px;
+  }
+
+  .timer-ring-wrap svg {
+    position: absolute;
+    inset: 0;
+    transform: rotate(-90deg);
+  }
+
+  .ring-bg { fill: none; stroke: var(--surface2); stroke-width: 7; }
+  .ring-prog {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 7;
+    stroke-linecap: round;
+    transition: stroke 0.4s, stroke-dashoffset 0.8s ease;
+  }
+
+  .ring-glow {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 14;
+    stroke-linecap: round;
+    opacity: 0.12;
+    transition: stroke 0.4s, stroke-dashoffset 0.8s ease;
+  }
+
+  .timer-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .timer-display {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -2px;
+    color: var(--accent);
+    text-shadow: 0 0 28px rgba(108,99,255,0.5);
+    transition: color 0.3s, text-shadow 0.3s;
+    line-height: 1;
+  }
+
+  .timer-display.running  { color: var(--accent3); text-shadow: 0 0 28px rgba(67,233,123,0.5); }
+  .timer-display.paused   { color: var(--yellow);  text-shadow: 0 0 28px rgba(255,209,102,0.5); }
+
+  .timer-status {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .timer-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+    min-height: 18px;
+  }
+
+  .session-input { margin-bottom: 12px; }
+
+  .timer-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .btn-full { grid-column: span 2; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 9px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.73rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 600;
+  }
+
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: #5a52e0; }
+  .btn.danger { border-color: var(--accent2); color: var(--accent2); }
+  .btn.danger:hover { background: rgba(255,101,132,0.1); }
+
+  /* INPUTS */
+  .input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 11px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.73rem;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+
+  .input:focus { border-color: var(--accent); }
+  .input::placeholder { color: var(--muted); }
+
+  .input-date {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    outline: none;
+    transition: border-color 0.15s;
+    color-scheme: dark;
+  }
+
+  .input-date:focus { border-color: var(--accent); }
+
+  .select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 8px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .add-row {
+    display: flex;
+    gap: 7px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* COL HEADERS */
+  .col-headers {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px 7px;
+    margin-bottom: 6px;
+    font-size: 0.56rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* SERIAL NO */
+  .sno {
+    min-width: 22px;
+    height: 20px;
+    border-radius: 5px;
+    background: rgba(108,99,255,0.1);
+    color: var(--accent);
+    font-size: 0.58rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid rgba(108,99,255,0.18);
+  }
+
+  /* LISTS */
+  .scroll-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  .scroll-list.tall { max-height: 320px; }
+
+  .scroll-list::-webkit-scrollbar { width: 3px; }
+  .scroll-list::-webkit-scrollbar-track { background: transparent; }
+  .scroll-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* LOG ITEM */
+  .log-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    background: var(--surface2);
+    border-radius: 8px;
+    font-size: 0.71rem;
+    border: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+
+  .log-item:hover { border-color: var(--border); }
+  .log-time     { color: var(--accent); font-weight: 600; min-width: 54px; font-size: 0.67rem; }
+  .log-label    { flex: 1; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .log-duration { color: var(--accent3); font-weight: 600; min-width: 55px; font-size: 0.67rem; }
+  .log-date     { color: var(--muted); font-size: 0.62rem; min-width: 100px; }
+
+  /* TODO ITEM */
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--surface2);
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    font-size: 0.71rem;
+  }
+
+  .todo-item:hover { border-color: var(--border); }
+  .todo-item.done { opacity: 0.5; }
+  .todo-item.done .todo-text { text-decoration: line-through; color: var(--muted); }
+
+  .todo-check {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .todo-check:hover { border-color: var(--accent3); }
+  .todo-check.checked { background: var(--accent3); border-color: var(--accent3); }
+  .todo-check.checked::after { content: '✓'; font-size: 10px; color: #0a0a0f; font-weight: 700; }
+
+  .todo-text { flex: 1; }
+
+  .todo-due {
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(108,99,255,0.12);
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .todo-due.overdue { background: rgba(255,101,132,0.15); color: var(--accent2); }
+  .todo-due.today   { background: rgba(255,209,102,0.15); color: var(--yellow); }
+
+  .ts-small {
+    font-size: 0.58rem;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* BACKLOG ITEM */
+  .backlog-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    background: var(--surface2);
+    border-radius: 8px;
+    font-size: 0.71rem;
+    border: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+
+  .backlog-item:hover { border-color: var(--border); }
+  .backlog-text { flex: 1; }
+
+  .priority-badge {
+    font-size: 0.58rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .p-high { background: rgba(255,101,132,0.18); color: var(--accent2); }
+  .p-med  { background: rgba(255,209,102,0.18); color: var(--yellow); }
+  .p-low  { background: rgba(67,233,123,0.18);  color: var(--accent3); }
+
+  .del-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: color 0.15s;
+    padding: 2px 4px;
+    flex-shrink: 0;
+  }
+
+  .del-btn:hover { color: var(--accent2); }
+
+  .empty-state {
+    text-align: center;
+    padding: 22px;
+    color: var(--muted);
+    font-size: 0.72rem;
+    line-height: 1.7;
+  }
+
+  /* STAT BOXES */
+  .records-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .stat-box {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 0.57rem;
+    color: var(--muted);
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  /* HISTORY TABS */
+  .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+
+  .tab {
+    padding: 5px 13px;
+    border-radius: 6px;
+    font-size: 0.63rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tab:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+
+  /* RESPONSIVE */
+  @media (max-width: 1100px) {
+    .grid { grid-template-columns: 300px 1fr; }
+    .timer-card { grid-row: auto; }
+  }
+
+  @media (max-width: 700px) {
+    .grid { grid-template-columns: 1fr; }
+    .timer-card { grid-row: auto; }
+    .records-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo">⚡ Founder OS</div>
+    <div class="header-right">
+      <div class="live-clock" id="liveClock">--:--:--</div>
+      <div class="date-display">Today<span id="headerDate"></span></div>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- ══ FOCUS TIMER ══ -->
+    <div class="card timer-card">
+      <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>Focus Timer</div>
+
+      <div class="timer-ring-wrap">
+        <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+          <circle class="ring-bg"   cx="120" cy="120" r="105"/>
+          <circle class="ring-glow" id="ringGlow" cx="120" cy="120" r="105"/>
+          <circle class="ring-prog" id="ringProg" cx="120" cy="120" r="105"/>
+        </svg>
+        <div class="timer-inner">
+          <div class="timer-display" id="timerDisplay">00:00:00</div>
+          <div class="timer-status" id="timerStatus">READY</div>
+        </div>
+      </div>
+
+      <div class="timer-label" id="timerLabel">Label your session below</div>
+
+      <div class="session-input">
+        <input class="input" id="sessionName" placeholder="Session label (e.g. Deep Work)..." />
+      </div>
+
+      <div class="timer-btns">
+        <button class="btn primary btn-full" onclick="startTimer()">▶&nbsp; Start</button>
+        <button class="btn" onclick="pauseTimer()">⏸ Pause</button>
+        <button class="btn" onclick="resetTimer()">↺ Reset</button>
+        <button class="btn danger btn-full" onclick="stopTimer()">⏹&nbsp; Stop &amp; Save to Log</button>
+      </div>
+    </div>
+
+    <!-- ══ TIME LOG ══ -->
+    <div class="card">
+      <div class="card-title">
+        <span class="dot" style="background:var(--yellow)"></span>Time Log
+        <span class="count-badge" id="logCount">0</span>
+      </div>
+      <div class="col-headers">
+        <span style="min-width:22px">#</span>
+        <span style="min-width:54px">Start</span>
+        <span style="flex:1">Session Label</span>
+        <span style="min-width:55px">Duration</span>
+        <span style="min-width:100px">Logged At</span>
+        <span style="min-width:24px"></span>
+      </div>
+      <div class="scroll-list" id="logList">
+        <div class="empty-state">No sessions logged yet.<br>Start the timer to begin.</div>
+      </div>
+    </div>
+
+    <!-- ══ TO-DO ══ -->
+    <div class="card">
+      <div class="card-title">
+        <span class="dot" style="background:var(--accent2)"></span>To-Do List
+        <span class="count-badge" id="todoCount">0</span>
+      </div>
+      <div class="add-row">
+        <input class="input" id="todoInput" placeholder="Task description..." onkeydown="if(event.key==='Enter') addTodo()" style="flex:2; min-width:120px" />
+        <input class="input-date" type="date" id="todoDate" title="Due date" />
+        <button class="btn primary" onclick="addTodo()">+ Add</button>
+      </div>
+      <div class="col-headers">
+        <span style="min-width:22px">#</span>
+        <span style="min-width:18px"></span>
+        <span style="flex:1">Task</span>
+        <span style="min-width:65px">Due</span>
+        <span style="min-width:95px">Added At</span>
+        <span style="min-width:24px"></span>
+      </div>
+      <div class="scroll-list tall" id="todoList">
+        <div class="empty-state">No tasks yet. Add one above!</div>
+      </div>
+    </div>
+
+    <!-- ══ BACKLOG ══ -->
+    <div class="card">
+      <div class="card-title">
+        <span class="dot" style="background:var(--accent)"></span>Backlog
+        <span class="count-badge" id="backlogCount">0</span>
+      </div>
+      <div class="add-row">
+        <input class="input" id="backlogInput" placeholder="Backlog item..." onkeydown="if(event.key==='Enter') addBacklog()" style="flex:2; min-width:100px" />
+        <input class="input-date" type="date" id="backlogDate" title="Target date" />
+        <select class="select" id="backlogPriority">
+          <option value="high">🔴 High</option>
+          <option value="med" selected>🟡 Med</option>
+          <option value="low">🟢 Low</option>
+        </select>
+        <button class="btn primary" onclick="addBacklog()">+</button>
+      </div>
+      <div class="col-headers">
+        <span style="min-width:22px">#</span>
+        <span style="min-width:44px">Priority</span>
+        <span style="flex:1">Item</span>
+        <span style="min-width:65px">Target</span>
+        <span style="min-width:95px">Added At</span>
+        <span style="min-width:24px"></span>
+      </div>
+      <div class="scroll-list tall" id="backlogList">
+        <div class="empty-state">Backlog is clean!</div>
+      </div>
+    </div>
+
+    <!-- ══ RECORDS & PERMANENT HISTORY ══ -->
+    <div class="card" style="grid-column: 2 / -1;">
+      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>Records &amp; Permanent History</div>
+
+      <div class="records-grid">
+        <div class="stat-box">
+          <div class="stat-value" id="statSessions">0</div>
+          <div class="stat-label">Sessions</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="statHours">0h</div>
+          <div class="stat-label">Total Time</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="statDone">0</div>
+          <div class="stat-label">Tasks Done</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="statBacklog">0</div>
+          <div class="stat-label">Backlog Items</div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab(this,'sessions')">All Sessions</button>
+        <button class="tab" onclick="switchTab(this,'tasks')">Completed Tasks</button>
+        <button class="tab" onclick="switchTab(this,'backlog')">Backlog History</button>
+      </div>
+
+      <div class="scroll-list" id="historyList" style="max-height:200px;">
+        <div class="empty-state">No history yet.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────
+let timerInterval = null;
+let timerSeconds  = 0;
+let timerRunning  = false;
+let sessionStart  = null;
+
+let timeLogs = JSON.parse(localStorage.getItem('fl_timeLogs') || '[]');
+let todos    = JSON.parse(localStorage.getItem('fl_todos')    || '[]');
+let backlog  = JSON.parse(localStorage.getItem('fl_backlog')  || '[]');
+
+let currentTab = 'sessions';
+
+// ── SAVE ───────────────────────────────────────────────────────────
+function save() {
+  localStorage.setItem('fl_timeLogs', JSON.stringify(timeLogs));
+  localStorage.setItem('fl_todos',    JSON.stringify(todos));
+  localStorage.setItem('fl_backlog',  JSON.stringify(backlog));
+}
+
+// ── FORMAT ─────────────────────────────────────────────────────────
+function fmtSecs(s) {
+  return [Math.floor(s/3600), Math.floor((s%3600)/60), s%60]
+    .map(n => String(n).padStart(2,'0')).join(':');
+}
+
+function fmtDuration(s) {
+  if(s < 60)   return `${s}s`;
+  if(s < 3600) return `${Math.floor(s/60)}m ${s%60}s`;
+  return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m`;
+}
+
+function fmtDate(d) {
+  if(!d) return '';
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+
+function fmtDateTime(ts) {
+  if(!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'2-digit'}) + ' ' +
+         d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+
+function nowISO() { return new Date().toISOString(); }
+
+function getDueClass(v) {
+  if(!v) return '';
+  const t = new Date().toISOString().split('T')[0];
+  if(v < t) return 'overdue';
+  if(v === t) return 'today';
+  return '';
+}
+
+// ── LIVE CLOCK ─────────────────────────────────────────────────────
+function tickClock() {
+  document.getElementById('liveClock').textContent =
+    new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+document.getElementById('headerDate').textContent =
+  new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+
+setInterval(tickClock, 1000);
+tickClock();
+
+// ── TIMER RING ─────────────────────────────────────────────────────
+const R = 105;
+const CIRC = +(2 * Math.PI * R).toFixed(2); // 659.73
+
+function initRing() {
+  ['ringProg','ringGlow'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.strokeDasharray  = CIRC;
+    el.style.strokeDashoffset = CIRC;
+  });
+}
+
+function updateRing(s) {
+  const frac   = Math.min(s % 3600, 3600) / 3600;
+  const offset = CIRC - frac * CIRC;
+  document.getElementById('ringProg').style.strokeDashoffset = offset;
+  document.getElementById('ringGlow').style.strokeDashoffset = offset;
+}
+
+function setRingColor(color) {
+  document.getElementById('ringProg').style.stroke = color;
+  document.getElementById('ringGlow').style.stroke = color;
+}
+
+// ── TIMER ──────────────────────────────────────────────────────────
+function startTimer() {
+  if(timerRunning) return;
+  timerRunning = true;
+  if(!sessionStart) sessionStart = new Date();
+  document.getElementById('timerDisplay').className = 'timer-display running';
+  document.getElementById('timerStatus').textContent = 'RUNNING';
+  document.getElementById('timerLabel').textContent  = '● Recording session...';
+  setRingColor('var(--accent3)');
+  timerInterval = setInterval(() => {
+    timerSeconds++;
+    document.getElementById('timerDisplay').textContent = fmtSecs(timerSeconds);
+    updateRing(timerSeconds);
+  }, 1000);
+}
+
+function pauseTimer() {
+  if(!timerRunning) return;
+  clearInterval(timerInterval);
+  timerRunning = false;
+  document.getElementById('timerDisplay').className = 'timer-display paused';
+  document.getElementById('timerStatus').textContent = 'PAUSED';
+  document.getElementById('timerLabel').textContent  = '⏸ Paused — click Start to resume';
+  setRingColor('var(--yellow)');
+}
+
+function stopTimer() {
+  if(timerSeconds === 0) { alert('No session running. Start the timer first!'); return; }
+  clearInterval(timerInterval);
+  timerRunning = false;
+  const label = document.getElementById('sessionName').value.trim() || 'Unnamed Session';
+  timeLogs.unshift({
+    id: Date.now(),
+    label,
+    duration: timerSeconds,
+    startTime: sessionStart
+      ? sessionStart.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})
+      : new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+    ts: nowISO()
+  });
+  save();
+  renderLogs(); renderStats(); renderHistory();
+  resetTimer();
+  document.getElementById('sessionName').value = '';
+  document.getElementById('timerLabel').textContent = '✓ Session saved to log!';
+  setTimeout(() => { document.getElementById('timerLabel').textContent = 'Label your session below'; }, 2500);
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false; timerSeconds = 0; sessionStart = null;
+  document.getElementById('timerDisplay').textContent  = '00:00:00';
+  document.getElementById('timerDisplay').className    = 'timer-display';
+  document.getElementById('timerStatus').textContent   = 'READY';
+  document.getElementById('timerLabel').textContent    = 'Label your session below';
+  setRingColor('var(--accent)');
+  initRing();
+}
+
+// ── TIME LOG ───────────────────────────────────────────────────────
+function renderLogs() {
+  const el = document.getElementById('logList');
+  document.getElementById('logCount').textContent = timeLogs.length;
+  if(!timeLogs.length) {
+    el.innerHTML = '<div class="empty-state">No sessions logged yet.<br>Start the timer to begin.</div>';
+    return;
+  }
+  el.innerHTML = timeLogs.map((l,i) => `
+    <div class="log-item">
+      <span class="sno">${i+1}</span>
+      <span class="log-time">${l.startTime}</span>
+      <span class="log-label">${l.label}</span>
+      <span class="log-duration">${fmtDuration(l.duration)}</span>
+      <span class="log-date">${fmtDateTime(l.ts)}</span>
+      <button class="del-btn" onclick="deleteLog(${l.id})">✕</button>
+    </div>`).join('');
+}
+
+function deleteLog(id) {
+  timeLogs = timeLogs.filter(l => l.id !== id);
+  save(); renderLogs(); renderStats(); renderHistory();
+}
+
+// ── TO-DO ──────────────────────────────────────────────────────────
+function addTodo() {
+  const txt = document.getElementById('todoInput').value.trim();
+  if(!txt) return;
+  todos.unshift({ id: Date.now(), text: txt,
+    dueDate: document.getElementById('todoDate').value,
+    done: false, doneAt: null, ts: nowISO() });
+  document.getElementById('todoInput').value = '';
+  document.getElementById('todoDate').value  = '';
+  save(); renderTodos(); renderStats();
+}
+
+function toggleTodo(id) {
+  const t = todos.find(t => t.id === id);
+  if(!t) return;
+  t.done   = !t.done;
+  t.doneAt = t.done ? nowISO() : null;
+  save(); renderTodos(); renderStats(); renderHistory();
+}
+
+function deleteTodo(id) {
+  todos = todos.filter(t => t.id !== id);
+  save(); renderTodos(); renderStats(); renderHistory();
+}
+
+function renderTodos() {
+  const el = document.getElementById('todoList');
+  document.getElementById('todoCount').textContent = todos.length;
+  if(!todos.length) { el.innerHTML = '<div class="empty-state">No tasks yet. Add one above!</div>'; return; }
+  el.innerHTML = todos.map((t,i) => {
+    const dc = getDueClass(t.dueDate);
+    return `
+    <div class="todo-item ${t.done ? 'done' : ''}">
+      <span class="sno" style="${t.done ? 'opacity:0.4' : ''}">${i+1}</span>
+      <div class="todo-check ${t.done ? 'checked' : ''}" onclick="toggleTodo(${t.id})"></div>
+      <span class="todo-text">${t.text}</span>
+      ${t.dueDate
+        ? `<span class="todo-due ${dc}">${fmtDate(t.dueDate)}${dc==='overdue' ? ' ⚠' : dc==='today' ? ' ★' : ''}</span>`
+        : `<span style="min-width:65px;flex-shrink:0"></span>`}
+      <span class="ts-small">${fmtDateTime(t.ts)}</span>
+      <button class="del-btn" onclick="deleteTodo(${t.id})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ── BACKLOG ────────────────────────────────────────────────────────
+function addBacklog() {
+  const txt = document.getElementById('backlogInput').value.trim();
+  if(!txt) return;
+  backlog.unshift({ id: Date.now(), text: txt,
+    priority:   document.getElementById('backlogPriority').value,
+    targetDate: document.getElementById('backlogDate').value,
+    ts: nowISO() });
+  document.getElementById('backlogInput').value = '';
+  document.getElementById('backlogDate').value  = '';
+  save(); renderBacklog(); renderStats(); renderHistory();
+}
+
+function deleteBacklog(id) {
+  backlog = backlog.filter(b => b.id !== id);
+  save(); renderBacklog(); renderStats(); renderHistory();
+}
+
+function renderBacklog() {
+  const el = document.getElementById('backlogList');
+  document.getElementById('backlogCount').textContent = backlog.length;
+  if(!backlog.length) { el.innerHTML = '<div class="empty-state">Backlog is clean!</div>'; return; }
+  const order = {high:0, med:1, low:2};
+  const sorted = [...backlog].sort((a,b) => order[a.priority] - order[b.priority]);
+  el.innerHTML = sorted.map((b,i) => `
+    <div class="backlog-item">
+      <span class="sno">${i+1}</span>
+      <span class="priority-badge p-${b.priority}">${b.priority.toUpperCase()}</span>
+      <span class="backlog-text">${b.text}</span>
+      <span class="ts-small" style="min-width:65px">${b.targetDate ? fmtDate(b.targetDate) : '—'}</span>
+      <span class="ts-small">${fmtDateTime(b.ts)}</span>
+      <button class="del-btn" onclick="deleteBacklog(${b.id})">✕</button>
+    </div>`).join('');
+}
+
+// ── STATS ──────────────────────────────────────────────────────────
+function renderStats() {
+  const secs = timeLogs.reduce((a,l) => a + l.duration, 0);
+  document.getElementById('statSessions').textContent = timeLogs.length;
+  document.getElementById('statHours').textContent    = (secs/3600).toFixed(1) + 'h';
+  document.getElementById('statDone').textContent     = todos.filter(t => t.done).length;
+  document.getElementById('statBacklog').textContent  = backlog.length;
+}
+
+// ── HISTORY TABS ───────────────────────────────────────────────────
+function switchTab(btn, tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderHistory();
+}
+
+function renderHistory() {
+  const el = document.getElementById('historyList');
+
+  if(currentTab === 'sessions') {
+    if(!timeLogs.length) { el.innerHTML = '<div class="empty-state">No sessions yet.</div>'; return; }
+    el.innerHTML = timeLogs.map((l,i) => `
+      <div class="log-item">
+        <span class="sno">${i+1}</span>
+        <span class="log-time">${l.startTime}</span>
+        <span class="log-label">${l.label}</span>
+        <span class="log-duration">${fmtDuration(l.duration)}</span>
+        <span class="log-date">${fmtDateTime(l.ts)}</span>
+      </div>`).join('');
+
+  } else if(currentTab === 'tasks') {
+    const done = todos.filter(t => t.done);
+    if(!done.length) { el.innerHTML = '<div class="empty-state">No completed tasks yet.</div>'; return; }
+    el.innerHTML = done.map((t,i) => `
+      <div class="todo-item done">
+        <span class="sno" style="opacity:0.4">${i+1}</span>
+        <div class="todo-check checked"></div>
+        <span class="todo-text">${t.text}</span>
+        ${t.dueDate ? `<span class="todo-due">${fmtDate(t.dueDate)}</span>` : ''}
+        <span class="ts-small">Added: ${fmtDateTime(t.ts)}</span>
+        ${t.doneAt ? `<span class="ts-small" style="color:var(--accent3)">✓ Done: ${fmtDateTime(t.doneAt)}</span>` : ''}
+      </div>`).join('');
+
+  } else {
+    const sorted = [...backlog].sort((a,b) => new Date(b.ts) - new Date(a.ts));
+    if(!sorted.length) { el.innerHTML = '<div class="empty-state">No backlog history yet.</div>'; return; }
+    el.innerHTML = sorted.map((b,i) => `
+      <div class="backlog-item">
+        <span class="sno">${i+1}</span>
+        <span class="priority-badge p-${b.priority}">${b.priority.toUpperCase()}</span>
+        <span class="backlog-text">${b.text}</span>
+        <span class="ts-small" style="min-width:65px">${b.targetDate ? fmtDate(b.targetDate) : '—'}</span>
+        <span class="ts-small">${fmtDateTime(b.ts)}</span>
+      </div>`).join('');
+  }
+}
+
+// ── INIT ───────────────────────────────────────────────────────────
+initRing();
+renderLogs();
+renderTodos();
+renderBacklog();
+renderStats();
+renderHistory();
+</script>
+</body>
+</html>
